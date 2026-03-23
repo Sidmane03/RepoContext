@@ -1,5 +1,10 @@
 import type { RepoFile } from '../type';
 
+interface GitHubTreeNode {
+  type: string;
+  path: string;
+}
+
 export async function fetchGithubTree(repoUrl: string): Promise<string[]> {
   const urlObj = new URL(repoUrl);
   if (urlObj.hostname !== 'github.com') throw "Invalid GitHub URL";
@@ -15,10 +20,10 @@ export async function fetchGithubTree(repoUrl: string): Promise<string[]> {
   if (res.status === 403 || res.status === 429) throw "GitHub rate limit hit \u2014 wait a minute and try again";
   if (!res.ok) throw `GitHub tree fetch failed: ${res.statusText}`;
 
-  const data = await res.json();
+  const data = await res.json() as { tree: GitHubTreeNode[] };
   const tree: string[] = data.tree
-    .filter((node: any) => node.type === 'blob')
-    .map((node: any) => node.path);
+    .filter((node: GitHubTreeNode) => node.type === 'blob')
+    .map((node: GitHubTreeNode) => node.path);
   
   return tree;
 }

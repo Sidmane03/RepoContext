@@ -13,7 +13,7 @@ import JSZip from 'jszip';
 
 interface Props {
   state: AppState;
-  setProfile: (p: Profile) => void;
+  setProfile: (p: Profile | ((prev: Profile) => Profile)) => void;
   setView: (v: View) => void;
   setLoading: (l: boolean, m?: string) => void;
   setError: (e: string | null) => void;
@@ -132,22 +132,22 @@ export default function ConfigureView({ state, setProfile, setView, setLoading, 
   const checkedSet = useMemo(() => new Set(profile.includePatterns), [profile.includePatterns]);
 
   useEffect(() => {
-    if (profile.projectName) {
-      const sanitized = profile.projectName.replace(/[^a-z0-9_-]/gi, '_').toLowerCase();
-      setProfile({ ...profile, outputFilename: `${sanitized}_context.md` });
-    } else {
-      setProfile({ ...profile, outputFilename: '' });
-    }
-  }, [profile.projectName]);
+    setProfile(prev => {
+      const sanitized = prev.projectName.replace(/[^a-z0-9_-]/gi, '_').toLowerCase();
+      const newFilename = prev.projectName ? `${sanitized}_context.md` : '';
+      if (prev.outputFilename === newFilename) return prev;
+      return { ...prev, outputFilename: newFilename };
+    });
+  }, [profile.projectName, setProfile]);
 
-  const handleFieldChange = (field: keyof Profile, value: any) => {
-    setProfile({ ...profile, [field]: value });
+  const handleFieldChange = <K extends keyof Profile>(field: K, value: Profile[K]) => {
+    setProfile(prev => ({ ...prev, [field]: value }));
   };
 
   const handleTreeChange = (paths: string[], checked: boolean) => {
     const newSet = new Set(checkedSet);
     paths.forEach(p => checked ? newSet.add(p) : newSet.delete(p));
-    handleFieldChange('includePatterns', Array.from(newSet));
+    setProfile(prev => ({ ...prev, includePatterns: Array.from(newSet) }));
   };
 
   const addExcludePattern = () => {
@@ -182,8 +182,8 @@ export default function ConfigureView({ state, setProfile, setView, setLoading, 
         setTreePaths(paths);
         handleFieldChange('includePatterns', paths);
       }
-    } catch (e: any) {
-      setError(e.message || String(e));
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : String(e));
     } finally {
       setLoading(false);
     }
@@ -226,8 +226,8 @@ export default function ConfigureView({ state, setProfile, setView, setLoading, 
       const mdContent = generateMarkdown(profile.projectName, treeString, finalFiles);
       
       setGeneratedData(mdContent, finalFiles.length);
-    } catch (e: any) {
-      setError(e.message || String(e));
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : String(e));
       setLoading(false);
     }
   };
@@ -247,8 +247,8 @@ export default function ConfigureView({ state, setProfile, setView, setLoading, 
       const structureFilename = profile.outputFilename.replace('-context.md', '-structure.md').replace('_context.md', '_structure.md');
       dlAnchorElem.setAttribute("download", structureFilename || `${profile.projectName.toLowerCase()}_structure.md`);
       dlAnchorElem.click();
-    } catch (e: any) {
-      setError(e.message || String(e));
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : String(e));
     }
   };
 
