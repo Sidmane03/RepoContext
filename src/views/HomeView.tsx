@@ -20,7 +20,7 @@ export default function HomeView({ setView, setProfile }: Props) {
             const data = JSON.parse(event.target?.result as string) as Profile;
             setProfile(data);
             setView('configure');
-          } catch (err) {
+          } catch {
             alert('CRITICAL ERROR: Invalid profile JSON file.');
           }
         };
