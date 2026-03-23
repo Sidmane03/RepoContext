@@ -1,8 +1,8 @@
 
 # RepoContext
 
-Feeding a codebase to an AI tool like NotebookLM is tedious — copy the URL, 
-paste it into some third-party site, retype your filters, download, rename. 
+Feeding a codebase to an AI tool like NotebookLM is tedious copy the URL, 
+paste it into some third party site, retype your filters, download, rename. 
 Every single time the code changes.
 
 RepoContext fixes that. Configure a project once, save it as a profile, 
